@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: "builder"
+    env_file:
+      - .env.test
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-test
+    ports:
+      - "5439:5432"
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: go_clean_starter_test
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d go_clean_starter_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-test-data:
+
+networks:
+  app-network:
+    driver: bridge

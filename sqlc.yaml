@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "migration/sql"           # Folder with .sql files (only UPs are parsed)
+    queries: "internal/sqlc/query"    # Folder with SELECT/INSERT/UPDATE SQL
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/sqlc"

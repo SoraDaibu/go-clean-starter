@@ -1,0 +1,20 @@
+version: "1"
+
+linters:
+  enable:
+    - govet            # reports suspicious constructs
+    - staticcheck      # smarter replacement of several older linters
+    - gofmt            # checks formatting
+    - goimports        # checks import order and unused imports
+    - unused           # checks for unused variables/constants/etc.
+    - structcheck      # finds unused struct fields
+    - deadcode         # finds unused code
+    - errcheck         # checks that errors are handled
+    - gosimple         # suggests simplifications
+    - typecheck        # like `go type` but more strict
+    - ineffassign      # detects ineffectual assignments
+    - revive           # modern linter with configurable rules
+
+  disable:
+    - megacheck        # deprecated, replaced by staticcheck
+    - lll              # long lines, often too strict for modern editors

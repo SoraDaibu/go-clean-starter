@@ -1,0 +1,27 @@
+#:schema disabled
+
+# ============================================================================
+# Air Configuration for Live Reloading Go Applications
+# ============================================================================
+
+# This file configures Air (https://github.com/air-verse/air) for hot reloading during development.
+# Options with default values are not included for simplicity.
+
+[build]
+  send_interrupt = true # Send interrupt signal (SIGINT) before killing process
+
+[color]
+  main = "magenta" # Color for main Air process messages
+  build = "yellow" # Color for build process messages
+  runner = "green" # Color for runner process messages
+  watcher = "cyan" # Color for file watcher messages
+
+[log]
+  time = true # Include timestamps in Air's log messages
+
+[misc]
+  clean_on_exit = true # Delete tmp directory when Air exits
+
+[screen]
+  clear_on_rebuild = true # Clear terminal screen on each rebuild
+  keep_scroll = true # Preserve scroll position after clearing screen
