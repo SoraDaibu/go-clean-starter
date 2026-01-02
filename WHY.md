@@ -8,6 +8,19 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 
 `go-clean-starter` is a backend template built with **Go** and designed around **Clean Architecture** principles. It aims to provide a solid foundation for scalable, testable, and maintainable applications—suitable for small to medium teams, indie products, or internal tools.
 
+## 📚 Key Libraries
+
+- **[Echo](https://github.com/labstack/echo)** - Fast and lightweight HTTP web framework for Go
+- **[sqlc](https://github.com/kyleconroy/sqlc)** - Generate type-safe Go code from SQL queries
+- **[golang-migrate](https://github.com/golang-migrate/migrate)** - Database migration tool with version control
+- **[Wire](https://github.com/google/wire)** - Compile-time dependency injection for Go
+- **[oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)** - Generate Go types from OpenAPI 3.x specifications
+- **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
+- **[PostgreSQL driver (lib/pq)](https://github.com/lib/pq)** - Pure Go PostgreSQL database driver
+- **[Zerolog](https://github.com/rs/zerolog)** - Fast and simple JSON logger
+- **[CLI v3](https://github.com/urfave/cli)** - Command line interface framework
+- **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
+
 
 ## 🧠 Core Decisions
 
