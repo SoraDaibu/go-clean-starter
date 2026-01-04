@@ -17,24 +17,22 @@
 
 ### アーキテクチャ
 
-```txt
-┌────────────────────────────────────────────┐
-│           Docker Compose Project           │
-│                                            │
-│    ┌──────────────┐   ┌────────────────┐   │
-│    │     API      │   │   Task-Runner  │   │
-│    │    (HTTP)    │   │   (CLI Tasks)  │   │
-│    └───────┬──────┘   └───────┬────────┘   │
-│            │                  │            │
-│            ▼                  ▼            │
-│     ┌────────────────────────────────┐     │
-│     │          PostgreSQL DB         │     │
-│     │     (go_clean_starter DB)      │     │
-│     └────────────────────────────────┘     │
-└────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Docker["Docker Compose Project"]
+        API["API<br/>(HTTP)"]
+        Task["Task-Runner<br/>(CLI Tasks)"]
+        DB["PostgreSQL DB<br/>(go_clean_starter DB)"]
 
+        API --> DB
+        Task --> DB
+    end
+
+    style Docker fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style API fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style Task fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style DB fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
 ```
-
 ### 主要技術
 - **Go**: 高性能、シンプルさ、強力な並行処理サポートを持つこのアプリの主要言語
 - **Echo**: クリーンなルーティングと豊富なミドルウェアサポートを持つ高速で軽量なHTTPウェブフレームワーク
