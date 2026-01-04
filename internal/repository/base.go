@@ -10,6 +10,7 @@ import (
 // BaseRepository provides common database operations
 // Following OCP: provides extensible base functionality without requiring modification
 type BaseRepository struct {
+	// pgxpool.Pool is safe to use from multiple goroutines simultaneously
 	pool *pgxpool.Pool
 }
 
