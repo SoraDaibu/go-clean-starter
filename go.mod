@@ -1,6 +1,6 @@
 module github.com/SoraDaibu/go-clean-starter
 
-go 1.24.2
+go 1.25.5
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.2

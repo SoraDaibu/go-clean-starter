@@ -1,5 +1,5 @@
 # builder stage
-FROM golang:1.24-alpine3.21 AS builder
+FROM golang:1.25-alpine3.21 AS builder
 # set LOCAL=false by default, which is necessary to pass as an argument to the Dockerfile
 ARG LOCAL=false
 RUN apk add --no-cache git
