@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/SoraDaibu/go-clean-starter/internal/sqlc"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Transaction represents an interface for grouping business procedures.
@@ -17,39 +18,39 @@ type Transaction interface {
 }
 
 type dbTransaction struct {
-	db *sql.DB
+	pool *pgxpool.Pool
 }
 
-func NewTransaction(db *sql.DB) Transaction {
-	return &dbTransaction{db: db}
+func NewTransaction(pool *pgxpool.Pool) Transaction {
+	return &dbTransaction{pool: pool}
 }
 
 func (tx *dbTransaction) Do(
 	ctx context.Context,
 	fn func(context.Context) error,
 ) error {
-	t, err := tx.db.BeginTx(ctx, nil)
+	t, err := tx.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer t.Rollback()
+	defer t.Rollback(ctx)
 
 	if err := fn(SetSession(ctx, t)); err != nil {
 		return err
 	}
 
-	return t.Commit()
+	return t.Commit(ctx)
 }
 
 type key struct{ value string }
 
 var _contextKeyTx = &key{"_contextKeyTx"}
 
-// GetSessionOr returns the current transaction or the fallback database.
-// It'll use a transaction if it exists, otherwise it'll use the fallback database.
-func GetSessionOr(ctx context.Context, fallback *sql.DB) sqlc.DBTX {
+// GetSessionOr returns the current transaction or the fallback pool.
+// It'll use a transaction if it exists, otherwise it'll use the fallback pool.
+func GetSessionOr(ctx context.Context, fallback *pgxpool.Pool) sqlc.DBTX {
 	if tx := ctx.Value(_contextKeyTx); tx != nil {
-		if t, ok := tx.(*sql.Tx); ok {
+		if t, ok := tx.(pgx.Tx); ok {
 			return t
 		}
 	}
@@ -58,11 +59,11 @@ func GetSessionOr(ctx context.Context, fallback *sql.DB) sqlc.DBTX {
 }
 
 // SetSession sets the current transaction to the context.
-func SetSession(ctx context.Context, tx *sql.Tx) context.Context {
+func SetSession(ctx context.Context, tx pgx.Tx) context.Context {
 	return context.WithValue(ctx, _contextKeyTx, tx)
 }
 
-// GetQueriesWithSession returns a new sqlc.Queries instance with the current transaction or the fallback database.
-func GetQueriesWithSession(ctx context.Context, fallback *sql.DB) *sqlc.Queries {
+// GetQueriesWithSession returns a new sqlc.Queries instance with the current transaction or the fallback pool.
+func GetQueriesWithSession(ctx context.Context, fallback *pgxpool.Pool) *sqlc.Queries {
 	return sqlc.New(GetSessionOr(ctx, fallback))
 }

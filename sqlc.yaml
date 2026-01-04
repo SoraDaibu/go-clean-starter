@@ -7,3 +7,6 @@ sql:
       go:
         package: "sqlc"
         out: "internal/sqlc"
+        sql_package: "pgx/v5"          # Use pgx native types (pgtype.UUID, etc.) instead of database/sql
+        emit_interface: true           # Generate Querier interface for mocking and testing
+        emit_pointers_for_null_types: true  # Use Go pointers (*int32) for nullable columns instead of sql.Null* types

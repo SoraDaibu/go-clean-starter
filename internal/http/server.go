@@ -25,7 +25,8 @@ func NewServer(d *builder.Dependency) *Server {
 	s := &Server{port: d.Config.App.ListenPort}
 
 	s.closer = func() error {
-		return d.DB.Close()
+		d.DB.Close()
+		return nil
 	}
 
 	s.echo = setup(d)

@@ -1,19 +1,18 @@
 package builder
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/SoraDaibu/go-clean-starter/config"
-
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Dependency struct {
 	Config *config.Config
-	DB     *sql.DB
+	DB     *pgxpool.Pool
 	HTTP   *http.Client
 }
 
@@ -57,22 +56,31 @@ func Resolve(c *config.Config, dn *DependencyNeeds) (*Dependency, error) {
 }
 
 func connectDB(d *Dependency) error {
-	db, err := sql.Open("postgres", dbURL(d.Config, false))
+	// Parse config with pool settings
+	config, err := pgxpool.ParseConfig(dbURL(d.Config, false))
 	if err != nil {
 		return fmt.Errorf("%s: %w", dbURL(d.Config, true), err)
 	}
 
+	// Set connection pool settings
+	config.MaxConnLifetime = time.Duration(d.Config.DB.Connection.LifetimeSeconds) * time.Second
+	config.MaxConnIdleTime = time.Duration(d.Config.DB.Connection.LifetimeSeconds) * time.Second
+	config.MinConns = int32(d.Config.DB.Connection.MaxIdle)
+	config.MaxConns = int32(d.Config.DB.Connection.MaxOpen)
+
+	// Create connection pool
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return fmt.Errorf("failed to create connection pool: %w", err)
+	}
+
 	// Test the connection
-	if err := db.Ping(); err != nil {
+	if err := pool.Ping(context.Background()); err != nil {
+		pool.Close()
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Set connection pool settings
-	db.SetConnMaxLifetime(time.Duration(d.Config.DB.Connection.LifetimeSeconds) * time.Second)
-	db.SetMaxIdleConns(d.Config.DB.Connection.MaxIdle)
-	db.SetMaxOpenConns(d.Config.DB.Connection.MaxOpen)
-
-	d.DB = db
+	d.DB = pool
 	return nil
 }
 
@@ -83,11 +91,11 @@ func dbURL(c *config.Config, mask bool) string {
 	}
 
 	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		c.DB.Host,
-		c.DB.Port,
+		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		c.DB.User,
 		password,
+		c.DB.Host,
+		c.DB.Port,
 		c.DB.Name,
 		c.DB.SSLMode,
 	)

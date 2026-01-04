@@ -15,7 +15,7 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[golang-migrate](https://github.com/golang-migrate/migrate)** - Database migration tool with version control
 - **[oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)** - Generate Go types from OpenAPI 3.x specifications
 - **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
-- **[PostgreSQL driver (lib/pq)](https://github.com/lib/pq)** - Pure Go PostgreSQL database driver
+- **[pgx](https://github.com/jackc/pgx)** - High-performance PostgreSQL driver with rich PosgreSQL features and toolkit
 - **[Zerolog](https://github.com/rs/zerolog)** - Fast and simple JSON logger
 - **[CLI v3](https://github.com/urfave/cli)** - Command line interface framework
 - **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
@@ -113,6 +113,37 @@ Manual DI keeps the project simple and maintainable without sacrificing clarity 
 Air eliminates the tedious cycle of manually stopping, rebuilding, and restarting the application during development, making the feedback loop much faster for iterative coding.
 
 ---
+
+### 🔹 PostgreSQL Driver: **[pgx](https://github.com/jackc/pgx)**
+
+**pgx** is used as the PostgreSQL driver (native API, not stdlib mode) because:
+
+* **High performance and efficiency**
+  * Supports both text and binary wire protocols for optimal performance
+  * 2-3x faster than traditional database/sql drivers for many operations
+  * More efficient memory usage with fewer allocations
+  * Native connection pooling (`pgxpool`) with prepared statement caching
+
+* **Rich PostgreSQL feature support**
+  * Native support for PostgreSQL-specific types (arrays, JSONB, hstore, geometric types, etc.)
+  * Built-in COPY protocol support for high-speed bulk operations
+  * LISTEN/NOTIFY support for real-time event notifications
+  * Better handling of custom and composite types
+
+* **Active development and modern design**
+  * Actively maintained with regular updates and performance improvements
+  * Built for modern Go patterns and PostgreSQL versions
+  * Better observability with connection pool metrics and health checks
+  * Strong type safety when used with sqlc's `sql_package: "pgx/v5"` option
+
+* **Production-ready connection management**
+  * Sophisticated connection pooling with automatic health checks
+  * Better retry logic and error handling
+  * Support for connection lifecycle hooks and query logging
+
+While pgx can be used as a drop-in `database/sql` driver (stdlib mode), this project uses the **native pgx API** to take full advantage of its performance and PostgreSQL-specific features. This decision aligns with the goal of providing a high-performance, feature-rich template for production use.
+
+---
 ## ✏️ Alternatives Considered
 
 ### **Database: MySQL**
@@ -198,6 +229,34 @@ Air eliminates the tedious cycle of manually stopping, rebuilding, and restartin
 
    * `oapi-codegen` requires minimal configuration - a simple command-line flag specifies what to generate.
    * OpenAPI Generator requires complex template management and configuration files, adding unnecessary complexity for straightforward model generation.
+
+---
+
+### **PostgreSQL Driver: [lib/pq](https://github.com/lib/pq)**
+
+`lib/pq` was considered as it was the de facto standard PostgreSQL driver, but `pgx` was chosen instead:
+
+1. **Active maintenance and future-proofing**
+   * `lib/pq` is in maintenance mode since 2018 with no new feature development
+   * `pgx` is actively developed with regular performance improvements and bug fixes
+   * `pgx` supports the latest PostgreSQL features and Go versions
+
+2. **Performance advantages**
+   * `pgx` is 2-3x faster than `lib/pq` for most operations
+   * Binary protocol support in `pgx` reduces serialization overhead
+   * More efficient memory allocation and connection pooling in `pgx`
+
+3. **PostgreSQL feature support**
+   * `pgx` provides native support for PostgreSQL arrays, JSONB, and custom types
+   * `lib/pq` requires manual marshaling for many PostgreSQL-specific features
+   * `pgx` supports advanced features like COPY protocol and LISTEN/NOTIFY
+
+4. **Better tooling integration**
+   * `sqlc` has first-class support for pgx with `sql_package: "pgx/v5"`
+   * Type-safe code generation works seamlessly with pgx types
+   * Better observability and debugging capabilities
+
+While `lib/pq` remains stable and suitable for simple use cases, `pgx` offers significantly better performance, richer features, and active development, making it the better choice for a modern, production-ready template.
 
 ---
 

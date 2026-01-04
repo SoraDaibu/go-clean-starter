@@ -2,12 +2,13 @@ package user
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/SoraDaibu/go-clean-starter/domain"
 	"github.com/SoraDaibu/go-clean-starter/internal/repository"
+	"github.com/SoraDaibu/go-clean-starter/internal/repository/common"
 	"github.com/SoraDaibu/go-clean-starter/internal/sqlc"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // userRepository implements domain.UserRepository
@@ -19,20 +20,25 @@ type userRepository struct {
 
 // NewUserRepository creates a new user repository implementation
 // Following DIP: returns domain interface, not concrete type
-func NewUserRepository(db *sql.DB) domain.UserRepository {
+func NewUserRepository(pool *pgxpool.Pool) domain.UserRepository {
 	return &userRepository{
-		BaseRepository: repository.NewBaseRepository(db),
+		BaseRepository: repository.NewBaseRepository(pool),
 	}
 }
 
 // GetUser implements domain.UserReader
 func (r *userRepository) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
-	u, err := r.GetQueries(ctx).GetUser(ctx, id)
+	u, err := r.GetQueries(ctx).GetUser(ctx, common.UUIDToPgtype(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return domain.UserFromSource(u.ID, u.Name, u.Email), nil
+	userID, err := common.PgtypeToUUID(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.UserFromSource(userID, u.Name, u.Email), nil
 }
 
 // ListUsers implements domain.UserReader
@@ -55,7 +61,11 @@ func (r *userRepository) ListUsers(ctx context.Context, limit, offset int) ([]*d
 
 	result := make([]*domain.User, end-start)
 	for i, u := range users[start:end] {
-		result[i] = domain.UserFromSource(u.ID, u.Name, u.Email)
+		userID, err := common.PgtypeToUUID(u.ID)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = domain.UserFromSource(userID, u.Name, u.Email)
 	}
 
 	return result, nil
@@ -68,13 +78,18 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 		return nil, err
 	}
 
-	return domain.UserFromSource(u.ID, u.Name, u.Email), nil
+	userID, err := common.PgtypeToUUID(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.UserFromSource(userID, u.Name, u.Email), nil
 }
 
 // CreateUser implements domain.UserWriter
 func (r *userRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	u, err := r.GetQueries(ctx).CreateUser(ctx, sqlc.CreateUserParams{
-		ID:       user.ID(),
+		ID:       common.UUIDToPgtype(user.ID()),
 		Name:     user.Name(),
 		Email:    user.Email(),
 		Password: string(user.Password()),
@@ -84,13 +99,18 @@ func (r *userRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	return domain.UserFromSource(u.ID, u.Name, u.Email), nil
+	userID, err := common.PgtypeToUUID(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.UserFromSource(userID, u.Name, u.Email), nil
 }
 
 // UpdateUser implements domain.UserWriter
 func (r *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	u, err := r.GetQueries(ctx).UpdateUser(ctx, sqlc.UpdateUserParams{
-		ID:   user.ID(),
+		ID:   common.UUIDToPgtype(user.ID()),
 		Name: user.Name(),
 	})
 
@@ -98,10 +118,15 @@ func (r *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*do
 		return nil, err
 	}
 
-	return domain.UserFromSource(u.ID, u.Name, u.Email), nil
+	userID, err := common.PgtypeToUUID(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.UserFromSource(userID, u.Name, u.Email), nil
 }
 
 // DeleteUser implements domain.UserWriter
 func (r *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	return r.GetQueries(ctx).DeleteUser(ctx, id)
+	return r.GetQueries(ctx).DeleteUser(ctx, common.UUIDToPgtype(id))
 }

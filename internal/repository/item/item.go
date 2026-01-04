@@ -2,7 +2,6 @@ package item
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -11,6 +10,7 @@ import (
 	"github.com/SoraDaibu/go-clean-starter/internal/repository"
 	"github.com/SoraDaibu/go-clean-starter/internal/repository/common"
 	"github.com/SoraDaibu/go-clean-starter/internal/sqlc"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // itemRepository implements domain.ItemRepository
@@ -22,26 +22,31 @@ type itemRepository struct {
 
 // NewItemRepository creates a new item repository implementation
 // Following DIP: returns domain interface, not concrete type
-func NewItemRepository(db *sql.DB) domain.ItemRepository {
+func NewItemRepository(pool *pgxpool.Pool) domain.ItemRepository {
 	return &itemRepository{
-		BaseRepository: repository.NewBaseRepository(db),
+		BaseRepository: repository.NewBaseRepository(pool),
 	}
 }
 
 // GetItem implements domain.ItemReader
 func (r *itemRepository) GetItem(ctx context.Context, id uuid.UUID) (*domain.Item, error) {
 	queries := r.GetQueries(ctx)
-	item, err := queries.GetItem(ctx, id)
+	item, err := queries.GetItem(ctx, common.UUIDToPgtype(id))
 	if err != nil {
 		return nil, err
 	}
 
-	typeID, err := common.SqlNullInt32ToUint(item.TypeID)
+	itemID, err := common.PgtypeToUUID(item.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid item ID: %w", err)
+	}
+
+	typeID, err := common.Int32PtrToUint(item.TypeID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid type_id for item %s: %w", id, err)
 	}
 
-	return domain.ItemFromSource(item.ID, typeID), nil
+	return domain.ItemFromSource(itemID, typeID), nil
 }
 
 // ListItems implements domain.ItemReader
@@ -65,11 +70,15 @@ func (r *itemRepository) ListItems(ctx context.Context, limit, offset int) ([]*d
 
 	result := make([]*domain.Item, end-start)
 	for i, item := range items[start:end] {
-		typeID, err := common.SqlNullInt32ToUint(item.TypeID)
+		itemID, err := common.PgtypeToUUID(item.ID)
 		if err != nil {
-			return nil, fmt.Errorf("invalid type_id for item %s: %w", item.ID, err)
+			return nil, fmt.Errorf("invalid item ID: %w", err)
 		}
-		result[i] = domain.ItemFromSource(item.ID, typeID)
+		typeID, err := common.Int32PtrToUint(item.TypeID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid type_id for item %s: %w", itemID, err)
+		}
+		result[i] = domain.ItemFromSource(itemID, typeID)
 	}
 
 	return result, nil
@@ -79,42 +88,52 @@ func (r *itemRepository) ListItems(ctx context.Context, limit, offset int) ([]*d
 func (r *itemRepository) CreateItem(ctx context.Context, item *domain.Item) (*domain.Item, error) {
 	queries := r.GetQueries(ctx)
 	createdItem, err := queries.CreateItem(ctx, sqlc.CreateItemParams{
-		ID:     item.ID(),
-		TypeID: common.UintToSqlNullInt32(item.TypeID()),
+		ID:     common.UUIDToPgtype(item.ID()),
+		TypeID: common.UintToInt32Ptr(item.TypeID()),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	typeID, err := common.SqlNullInt32ToUint(createdItem.TypeID)
+	itemID, err := common.PgtypeToUUID(createdItem.ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid type_id for created item %s: %w", createdItem.ID, err)
+		return nil, fmt.Errorf("invalid created item ID: %w", err)
 	}
 
-	return domain.ItemFromSource(createdItem.ID, typeID), nil
+	typeID, err := common.Int32PtrToUint(createdItem.TypeID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid type_id for created item %s: %w", itemID, err)
+	}
+
+	return domain.ItemFromSource(itemID, typeID), nil
 }
 
 // UpdateItem implements domain.ItemWriter
 func (r *itemRepository) UpdateItem(ctx context.Context, item *domain.Item) (*domain.Item, error) {
 	queries := r.GetQueries(ctx)
 	updatedItem, err := queries.UpdateItem(ctx, sqlc.UpdateItemParams{
-		ID:     item.ID(),
-		TypeID: common.UintToSqlNullInt32(item.TypeID()),
+		ID:     common.UUIDToPgtype(item.ID()),
+		TypeID: common.UintToInt32Ptr(item.TypeID()),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	typeID, err := common.SqlNullInt32ToUint(updatedItem.TypeID)
+	itemID, err := common.PgtypeToUUID(updatedItem.ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid type_id for updated item %s: %w", updatedItem.ID, err)
+		return nil, fmt.Errorf("invalid updated item ID: %w", err)
 	}
 
-	return domain.ItemFromSource(updatedItem.ID, typeID), nil
+	typeID, err := common.Int32PtrToUint(updatedItem.TypeID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid type_id for updated item %s: %w", itemID, err)
+	}
+
+	return domain.ItemFromSource(itemID, typeID), nil
 }
 
 // DeleteItem implements domain.ItemWriter
 func (r *itemRepository) DeleteItem(ctx context.Context, id uuid.UUID) error {
 	queries := r.GetQueries(ctx)
-	return queries.DeleteItem(ctx, id)
+	return queries.DeleteItem(ctx, common.UUIDToPgtype(id))
 }
