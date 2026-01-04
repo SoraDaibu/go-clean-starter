@@ -54,9 +54,6 @@ clean-migration:
 sqlc:
 	sqlc generate
 
-wire:
-	wire ./builder
-
 oapi-codegen:
 	oapi-codegen -generate models -package handler -o internal/http/handler/openapi_types.gen.go doc/api.yaml
 

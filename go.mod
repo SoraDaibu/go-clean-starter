@@ -5,7 +5,6 @@ go 1.24.2
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/uuid v1.6.0
-	github.com/google/wire v0.6.0
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/lib/pq v1.10.9
 	github.com/oapi-codegen/runtime v1.1.1

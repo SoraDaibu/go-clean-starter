@@ -13,7 +13,6 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[Echo](https://github.com/labstack/echo)** - Fast and lightweight HTTP web framework for Go
 - **[sqlc](https://github.com/kyleconroy/sqlc)** - Generate type-safe Go code from SQL queries
 - **[golang-migrate](https://github.com/golang-migrate/migrate)** - Database migration tool with version control
-- **[Wire](https://github.com/google/wire)** - Compile-time dependency injection for Go
 - **[oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)** - Generate Go types from OpenAPI 3.x specifications
 - **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
 - **[PostgreSQL driver (lib/pq)](https://github.com/lib/pq)** - Pure Go PostgreSQL database driver
@@ -92,15 +91,16 @@ oapi-codegen ensures that the API implementation stays synchronized with its spe
 
 ---
 
-### 🔹 Dependency Injector: **[Wire](https://github.com/google/wire)**
+### 🔹 Dependency Injection: **Manual**
 
-**Wire** is used for dependency injection to keep object initialization clean, type-safe, and maintainable because:
-* Avoids manual wiring and automatically wires dependencies well, especially as dependencies grow.
-* Keeps constructors centralized and explicit.
-* Uses compile-time code generation—no runtime reflection, so zero overhead.
-* Encourages a modular, testable architecture (especially useful in Clean Architecture setups).
+**Manual dependency injection** is used to keep object initialization clean, explicit, and maintainable because:
+* Simple and idiomatic—follows standard Go practices without additional tooling
+* Explicit dependency graphs make code easy to read and debug
+* No build-time code generation or extra dependencies required
+* Constructors are centralized in the `builder` package
+* Encourages a modular, testable architecture (especially useful in Clean Architecture setups)
 
-Wire helps keep the project scalable without sacrificing clarity as services, repositories, and external clients increase in number.
+Manual DI keeps the project simple and maintainable without sacrificing clarity as services, repositories, and external clients increase in number.
 
 ### 🔹 Hot reload: **[air](https://github.com/air-verse/air)**
 
@@ -201,23 +201,26 @@ Air eliminates the tedious cycle of manually stopping, rebuilding, and restartin
 
 ---
 
-### **Dependency Injection Tool: [Fx](https://github.com/uber-go/fx)**
+### **Dependency Injection Tools: [Wire](https://github.com/google/wire) / [Fx](https://github.com/uber-go/fx)**
 
-`Fx` was skipped in favor of `Wire` for a few reasons:
+Specialized DI frameworks were skipped in favor of manual dependency injection:
 
-1. **Compile-time vs. Runtime Errors**
-   * `Wire` generates code at compile time, so missing or mismatched constructors are caught before running.
-   * `Fx` relies on runtime reflection, meaning DI errors only appear when `app.Start()` is invoked.
+1. **Simplicity and clarity**
+   * Manual DI uses plain Go code without code generation or framework abstractions
+   * The dependency graph is explicit and easy to trace through the codebase
+   * No build-time tooling or special commands required
 
-2. **No reflection overhead**
-   * `Wire` produces plain Go code that calls constructors directly—no hidden lookups or performance hit.
-   * `Fx` uses reflection to build its graph at startup, adding a small overhead.
+2. **Standard Go idioms**
+   * Most Go projects use manual DI for small-to-medium dependency graphs
+   * Follows the principle of "clear is better than clever"
+   * Reduces onboarding time for new developers familiar with Go
 
-3. **Simplicity for mid-sized projects**
-   * `Wire` keeps wiring in a single `wire.Build(...)` call, making dependencies explicit and easy to follow.
-   * `Fx`'s `fx.Provide`/`fx.Invoke` modules and lifecycle hooks introduce more framework-like complexity.
+3. **No overhead or magic**
+   * No code generation step (Wire) or runtime reflection (Fx)
+   * Stack traces and IDE navigation work seamlessly
+   * Easier debugging with explicit constructor calls
 
-
+For starting a Go backend project, manual DI normally provides the best balance of simplicity, maintainability, and clarity. Also it's not much common to have a dependency injection tool for a project based in Go.
 
 ## ✅ Why This Stack?
 
