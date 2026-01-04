@@ -20,7 +20,7 @@ type Config struct {
 		Name       string
 		SSLMode    string
 		Connection struct {
-			MaxIdle         int
+			MinIdleConns    int
 			MaxOpen         int
 			LifetimeSeconds int
 		}
@@ -55,9 +55,9 @@ func Load() (*Config, error) {
 	cnf.DB.SSLMode = os.Getenv("PGSSLMODE")
 
 	// Add missing database connection pool configuration
-	cnf.DB.Connection.MaxIdle, err = strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNS"))
+	cnf.DB.Connection.MinIdleConns, err = strconv.Atoi(os.Getenv("DB_MIN_IDLE_CONNS"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get DB_MAX_IDLE_CONNS: %w", err)
+		return nil, fmt.Errorf("failed to get DB_MIN_IDLE_CONNS: %w", err)
 	}
 	cnf.DB.Connection.MaxOpen, err = strconv.Atoi(os.Getenv("DB_MAX_OPEN_CONNS"))
 	if err != nil {

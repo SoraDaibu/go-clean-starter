@@ -65,7 +65,7 @@ func connectDB(d *Dependency) error {
 	// Set connection pool settings
 	config.MaxConnLifetime = time.Duration(d.Config.DB.Connection.LifetimeSeconds) * time.Second
 	config.MaxConnIdleTime = time.Duration(d.Config.DB.Connection.LifetimeSeconds) * time.Second
-	config.MinConns = int32(d.Config.DB.Connection.MaxIdle)
+	config.MinConns = int32(d.Config.DB.Connection.MinIdleConns)
 	config.MaxConns = int32(d.Config.DB.Connection.MaxOpen)
 
 	// Create connection pool
