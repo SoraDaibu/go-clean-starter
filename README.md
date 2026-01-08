@@ -102,24 +102,18 @@ go-clean-starter
 └── sqlc.yaml                    # configuration of sqlc
 ```
 
-## Setup
+## Quick Start
 
-### Setup environment values
-- create `.env` by copying `.env.sample`
+For first-time setup, run:
 ```bash
-cp .env.sample .env
+make quickstart
 ```
 
-### Docker
-- run `make build` to build Docker images
-```bash
-make build
-```
+This command will:
+1. Copy `.env.example` to `.env` (if not exists)
+2. Build and start all containers
 
-- run `make up` to create and run Docker containers by docker-compose
-```bash
-make up
-```
+The API will be available at `http://localhost:8080`
 
 💡 This project uses **[air](https://github.com/air-verse/air)**, which is Go hot reload. Hot reload helps us to develop faster.
 

@@ -1,10 +1,24 @@
-.PHONY: build up down down-api down-test test test-users test-items migration clean-migration docker-rmi import-items import-items-dry tree oapi-codegen
+.PHONY: quickstart build up down down-api down-test test test-users test-items migration clean-migration docker-rmi import-items import-items-dry tree oapi-codegen
 
 SERVICE := go-clean-starter
 TEST_SERVICE := $(SERVICE)-test
 
 DC := docker compose
 DC_TEST := $(DC) -p $(TEST_SERVICE) -f docker-compose.test.yaml
+
+# ─── Quick Start ───────────────────────────────────────────────────────────
+quickstart:
+	@if [ ! -f .env ]; then \
+		cp .env.example .env && \
+		echo "✅ Created .env from .env.example"; \
+	else \
+		echo "ℹ️  .env already exists, skipping copy"; \
+	fi
+	$(MAKE) up
+	@echo ""
+	@echo "🎉 Quickstart complete!"
+	@echo "📍 API running at http://localhost:8080"
+	@echo "💡 Run 'make test' to verify everything works"
 
 # ─── docker compose lifecycle ─────────────────────────────────────────────
 build:
