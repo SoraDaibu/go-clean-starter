@@ -11,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	github.com/urfave/cli/v3 v3.1.1
+	github.com/urfave/cli/v3 v3.6.2
 	golang.org/x/term v0.40.0
 )
 
