@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/oapi-codegen/runtime v1.3.0
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/term v0.41.0
