@@ -1,5 +1,3 @@
-.PHONY: quickstart build up down down-api down-test test test-users test-items migration clean-migration docker-rmi import-items import-items-dry tree oapi-codegen
-
 SERVICE := go-clean-starter
 TEST_SERVICE := $(SERVICE)-test
 
@@ -26,6 +24,12 @@ build:
 
 up:
 	$(DC) up -d
+
+log-api:
+	$(DC) logs -f api
+
+log-task-runner:
+	$(DC) logs -f task-runner
 
 down:
 	$(DC) down
@@ -82,4 +86,3 @@ import-items-dry:
 # ─── Chore ─────────────────────────────────────────────────────────────
 tree:
 	tree --dirsfirst -I 'node_modules|vendor'
-
