@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/SoraDaibu/go-clean-starter/builder"
 	"github.com/SoraDaibu/go-clean-starter/config"
 	"github.com/SoraDaibu/go-clean-starter/migration"
-	"github.com/rs/zerolog/log"
 
 	"github.com/urfave/cli/v3"
 )
@@ -32,7 +32,7 @@ var TaskCommand = &cli.Command{
 				// args
 				sourceDir := c.String("source-dir")
 				dryRun := c.Bool("dry-run")
-				log.Info().Str("source-dir", sourceDir).Bool("dry-run", dryRun).Msg("importing items")
+				slog.Info("importing items", "source-dir", sourceDir, "dry-run", dryRun)
 
 				// migrate if local
 				if cnf.App.Env == "local" {
@@ -47,7 +47,7 @@ var TaskCommand = &cli.Command{
 					return err
 				}
 
-				log.Info().Msg("item import success 🎉")
+				slog.Info("item import success 🎉")
 
 				return nil
 			}),

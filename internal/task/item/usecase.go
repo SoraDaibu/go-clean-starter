@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/SoraDaibu/go-clean-starter/domain"
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/SoraDaibu/go-clean-starter/internal/repository"
 )
 
@@ -14,6 +15,7 @@ type ItemTaskUsecase interface {
 type itemTaskUsecase struct {
 	Tx       repository.Transaction
 	ItemRepo domain.ItemRepository
+	Logger   logger.Logger
 }
 
 // NewItemTaskUsecase creates a new item task usecase
@@ -21,9 +23,11 @@ type itemTaskUsecase struct {
 func NewItemTaskUsecase(
 	tx repository.Transaction,
 	itemRepo domain.ItemRepository,
+	l logger.Logger,
 ) ItemTaskUsecase {
 	return &itemTaskUsecase{
 		Tx:       tx,
 		ItemRepo: itemRepo,
+		Logger:   l,
 	}
 }

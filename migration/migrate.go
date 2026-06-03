@@ -3,11 +3,11 @@ package migration
 import (
 	"embed"
 	"errors"
+	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/rs/zerolog/log"
 )
 
 //go:embed sql/*.sql
@@ -29,11 +29,11 @@ func Up(source string) error {
 	}
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Error().Err(err).Msg("migration failed")
+		slog.Error("migration failed", "err", err)
 		return err
 	}
 
-	log.Info().Msg("Migration Up completed")
+	slog.Info("Migration Up completed")
 	return nil
 }
 
@@ -44,10 +44,10 @@ func Down(source string) error {
 	}
 
 	if err := m.Steps(-1); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Error().Err(err).Msg("migration failed")
+		slog.Error("migration failed", "err", err)
 		return err
 	}
 
-	log.Info().Msg("Migration Down completed")
+	slog.Info("Migration Down completed")
 	return nil
 }

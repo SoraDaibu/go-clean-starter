@@ -16,7 +16,7 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)** - Generate Go types from OpenAPI 3.x specifications
 - **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
 - **[pgx](https://github.com/jackc/pgx)** - High-performance PostgreSQL driver with rich PosgreSQL features and toolkit
-- **[Zerolog](https://github.com/rs/zerolog)** - Fast and simple JSON logger
+- **[log/slog](https://pkg.go.dev/log/slog)** - Standard library structured logging
 - **[CLI v3](https://github.com/urfave/cli)** - Command line interface framework
 - **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
 
@@ -142,6 +142,24 @@ Air eliminates the tedious cycle of manually stopping, rebuilding, and restartin
   * Support for connection lifecycle hooks and query logging
 
 While pgx can be used as a drop-in `database/sql` driver (stdlib mode), this project uses the **native pgx API** to take full advantage of its performance and PostgreSQL-specific features. This decision aligns with the goal of providing a high-performance, feature-rich template for production use.
+
+---
+
+### 🔹 Logging: **[log/slog](https://pkg.go.dev/log/slog) (standard library)**
+
+`log/slog` is used for structured logging because:
+
+* **Standard library / zero dependency**
+  * It ships with Go, so it is versioned and patched alongside the toolchain and adds nothing to `go.mod`. Every project derived from this template inherits an idiomatic logging choice downstream users already know — the same reasoning the template applies to manual dependency injection.
+
+* **Clean Architecture fit**
+  * `slog`'s `Handler` interface decouples the call-site API from the output backend. The template wraps `*slog.Logger` behind a small `Logger` interface (`internal/logger`) and injects it once via the `builder` package; layers log against a stable contract, and the backend (JSON in production, human-readable text locally) is swappable without touching call sites.
+  * Only the entry layers (HTTP handlers/middleware and the task layer) log, so an event is not recorded repeatedly as it bubbles through the service and repository layers. Request-scoped fields such as `request_id` are derived in middleware and propagated through the request `context`.
+
+* **Ecosystem and roadmap**
+  * `slog` is the de facto structured-logging interface in Go, and the OpenTelemetry logs path (see Future Considerations) is built around it.
+
+**Accepted tradeoff:** `slog`'s built-in handlers allocate more and run slower than a zero-allocation logger. That is acceptable here because a starter template is bottlenecked on database and network I/O rather than log serialization, and downstream users can tune their own hot paths with `slog.LogAttrs` or a custom handler.
 
 ---
 ## ✏️ Alternatives Considered
@@ -280,6 +298,21 @@ Specialized DI frameworks were skipped in favor of manual dependency injection:
    * Easier debugging with explicit constructor calls
 
 For starting a Go backend project, manual DI normally provides the best balance of simplicity, maintainability, and clarity. Also it's not much common to have a dependency injection tool for a project based in Go.
+
+---
+
+### **Logging: [zerolog](https://github.com/rs/zerolog)**
+
+`zerolog` was the original logger and was reconsidered in favor of the standard library's `log/slog`:
+
+1. **External dependency vs. standard library**
+   * `zerolog` is a third-party dependency that has to be tracked and updated in `go.mod`. `log/slog` ships with Go, so it is versioned and patched with the toolchain and adds nothing downstream.
+
+2. **Ecosystem alignment**
+   * `log/slog` has become the de facto structured-logging interface in Go, and the OpenTelemetry logs path is built around it. Standardizing on it keeps the template idiomatic for the projects derived from it.
+
+3. **Performance tradeoff**
+   * `zerolog`'s zero-allocation path is genuinely faster, but a starter template is bottlenecked on database and network I/O, not log serialization. The convenience and zero-dependency nature of `log/slog` outweighs the raw throughput difference, and hot paths can still be tuned with `slog.LogAttrs` or a custom handler.
 
 ## ✅ Why This Stack?
 

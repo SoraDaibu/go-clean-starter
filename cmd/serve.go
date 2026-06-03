@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 
 	"github.com/SoraDaibu/go-clean-starter/builder"
@@ -17,7 +17,7 @@ var ServeCommand = &cli.Command{
 	Usage: "To run a backend server",
 	Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
 		// run server
-		log.Info().Msg("starting server by `serve` command...")
+		slog.Info("starting server by `serve` command...")
 
 		cnf, err := config.Load()
 		if err != nil {
@@ -27,7 +27,7 @@ var ServeCommand = &cli.Command{
 		dn := builder.NewDependencyNeedsAllTrue()
 		d, err := builder.Resolve(cnf, dn)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to resolve dependencies")
+			slog.Error("failed to resolve dependencies", "err", err)
 			return err
 		}
 

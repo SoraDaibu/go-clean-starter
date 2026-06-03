@@ -32,5 +32,5 @@ func InitializeUserHandler(d *Dependency) *user.UserHandler {
 func InitializeItemTaskUsecase(d *Dependency) item.ItemTaskUsecase {
 	transaction := repository.NewTransaction(d.DB)
 	itemRepository := itemRepo.NewItemRepository(d.DB)
-	return item.NewItemTaskUsecase(transaction, itemRepository)
+	return item.NewItemTaskUsecase(transaction, itemRepository, d.Logger)
 }

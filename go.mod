@@ -11,7 +11,6 @@ require (
 	github.com/labstack/echo/v4 v4.15.2
 	github.com/oapi-codegen/runtime v1.4.1
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.9.0
 	golang.org/x/term v0.43.0

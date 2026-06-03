@@ -4,21 +4,19 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"strings"
 	"syscall"
 
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/SoraDaibu/go-clean-starter/migration"
 
 	"golang.org/x/term"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v3"
 )
-
-var cliOutput = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 var MigrationCommand = &cli.Command{
 	Name: "migrate",
@@ -28,24 +26,26 @@ var MigrationCommand = &cli.Command{
 	Commands: []*cli.Command{{
 		Name: "up",
 		Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
-			log.Logger = cliOutput
+			// Use a human-readable logger for this interactive CLI command.
+			logger.SetDefault(logger.New("info", "local"))
 			if err := migration.Up("postgres://" + scanDatasource()); err != nil {
 				return err
 			}
 
-			log.Info().Msg("Successfully upped ⤴️")
+			slog.Info("Successfully upped ⤴️")
 
 			return nil
 		}),
 	}, {
 		Name: "down",
 		Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
-			log.Logger = cliOutput
+			// Use a human-readable logger for this interactive CLI command.
+			logger.SetDefault(logger.New("info", "local"))
 			if err := migration.Down("postgres://" + scanDatasource()); err != nil {
 				return err
 			}
 
-			log.Info().Msg("Successfully downed ⤵️")
+			slog.Info("Successfully downed ⤵️")
 
 			return nil
 		}),
@@ -118,7 +118,8 @@ func scanDatasource() string {
 
 	bytePassword, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
-		log.Panic().Err(err).Msg("")
+		slog.Error("failed to read password", "err", err)
+		panic(err)
 	}
 
 	fmt.Println("")

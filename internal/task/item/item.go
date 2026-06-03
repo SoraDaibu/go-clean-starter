@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/SoraDaibu/go-clean-starter/domain"
-	"github.com/rs/zerolog/log"
 )
 
 type ImportResult struct {
@@ -24,12 +23,12 @@ func (r *ImportResult) addError(err error) {
 }
 
 func (u *itemTaskUsecase) ImportItems(ctx context.Context, sourceDir string, dryRun bool) error {
-	log.Info().Str("source_dir", sourceDir).Bool("dry_run", dryRun).Msg("Starting item import")
+	u.Logger.Info("Starting item import", "source_dir", sourceDir, "dry_run", dryRun)
 
 	// Read all CSV files in the source directory
 	files, err := os.ReadDir(sourceDir)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to read source directory")
+		u.Logger.Error("Failed to read source directory", "err", err)
 		return fmt.Errorf("failed to read source directory: %w", err)
 	}
 
@@ -43,19 +42,19 @@ func (u *itemTaskUsecase) ImportItems(ctx context.Context, sourceDir string, dry
 		filePath := filepath.Join(sourceDir, file.Name())
 		result, err := u.importCSVFile(ctx, filePath, dryRun)
 		if err != nil {
-			log.Error().Err(err).Str("file", filePath).Msg("Failed to import CSV file")
+			u.Logger.Error("Failed to import CSV file", "err", err, "file", filePath)
 			return fmt.Errorf("failed to import file %s: %w", filePath, err)
 		}
 
 		result.FilePath = filePath
 		totalResults = append(totalResults, result)
 
-		log.Info().
-			Str("file", filePath).
-			Int("created", result.ItemsCreated).
-			Int("skipped", result.ItemsSkipped).
-			Int("errors", len(result.Errors)).
-			Msg("Import completed")
+		u.Logger.Info("Import completed",
+			"file", filePath,
+			"created", result.ItemsCreated,
+			"skipped", result.ItemsSkipped,
+			"errors", len(result.Errors),
+		)
 	}
 
 	// Summary log
@@ -68,12 +67,12 @@ func (u *itemTaskUsecase) ImportItems(ctx context.Context, sourceDir string, dry
 		totalErrors += len(result.Errors)
 	}
 
-	log.Info().
-		Int("files_processed", len(totalResults)).
-		Int("total_created", totalCreated).
-		Int("total_skipped", totalSkipped).
-		Int("total_errors", totalErrors).
-		Msg("Import summary")
+	u.Logger.Info("Import summary",
+		"files_processed", len(totalResults),
+		"total_created", totalCreated,
+		"total_skipped", totalSkipped,
+		"total_errors", totalErrors,
+	)
 
 	return nil
 }
@@ -101,7 +100,7 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 	for i, record := range records[1:] {
 		if len(record) < 3 {
 			err := fmt.Errorf("invalid CSV format at line %d: expected 3 columns (type_id,name,description), got %d", i+2, len(record))
-			log.Error().Err(err).Msg("invalid CSV format")
+			u.Logger.Error("invalid CSV format", "err", err)
 			result.addError(err)
 			continue
 		}
@@ -110,7 +109,7 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 		var typeID uint
 		if record[0] == "" {
 			err := fmt.Errorf("empty type_id for item %s at line %d", record[1], i+2)
-			log.Error().Err(err).Msg("empty type_id")
+			u.Logger.Error("empty type_id", "err", err)
 			result.addError(err)
 			continue
 		}
@@ -118,14 +117,14 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 		typeIDInt, err := strconv.Atoi(record[0])
 		if err != nil {
 			err := fmt.Errorf("invalid type_id '%s' for item %s at line %d: %w", record[0], record[1], i+2, err)
-			log.Error().Err(err).Msg("failed to convert type_id to int")
+			u.Logger.Error("failed to convert type_id to int", "err", err)
 			result.addError(err)
 			continue
 		}
 
 		if typeIDInt < 0 {
 			err := fmt.Errorf("negative type_id '%d' for item %s at line %d", typeIDInt, record[1], i+2)
-			log.Error().Err(err).Msg("invalid type_id")
+			u.Logger.Error("invalid type_id", "err", err)
 			result.addError(err)
 			continue
 		}
@@ -136,10 +135,7 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 		item := domain.NewItem(typeID)
 
 		if dryRun {
-			log.Info().
-				Str("id", item.ID().String()).
-				Interface("type_id", item.TypeID()).
-				Msg("DRY RUN: Would create item")
+			u.Logger.Info("DRY RUN: Would create item", "id", item.ID().String(), "type_id", item.TypeID())
 			result.ItemsCreated++
 			continue
 		}
@@ -157,10 +153,7 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 		}
 
 		result.ItemsCreated++
-		log.Debug().
-			Str("id", item.ID().String()).
-			Interface("type_id", item.TypeID()).
-			Msg("Item created successfully")
+		u.Logger.Debug("Item created successfully", "id", item.ID().String(), "type_id", item.TypeID())
 	}
 
 	return result, nil

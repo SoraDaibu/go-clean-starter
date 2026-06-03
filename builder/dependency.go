@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/SoraDaibu/go-clean-starter/config"
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Dependency struct {
 	Config *config.Config
+	Logger logger.Logger
 	DB     *pgxpool.Pool
 	HTTP   *http.Client
 }
@@ -39,8 +41,14 @@ func NewDependencyNeedsAllTrue() *DependencyNeeds {
 }
 
 func Resolve(c *config.Config, dn *DependencyNeeds) (*Dependency, error) {
+	l := logger.New(c.App.LogLevel, c.App.Env)
+	// Make slog's package-level functions (used by bootstrap/CLI code) share the
+	// same configured backend.
+	logger.SetDefault(l)
+
 	d := &Dependency{
 		Config: c,
+		Logger: l,
 		HTTP: &http.Client{
 			Timeout: time.Duration(c.HTTP.TimeoutSeconds) * time.Second,
 		},

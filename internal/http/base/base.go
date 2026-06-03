@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 type ResponseRoot struct {
@@ -50,7 +50,7 @@ func JSONWithTotal(c echo.Context, code int, data interface{}, total uint64) err
 
 func Bind(c echo.Context, v interface{}) error {
 	if err := c.Bind(v); err != nil {
-		log.Error().Stack().Err(errors.WithStack(err)).Msg("")
+		logger.FromContext(c.Request().Context()).Error("failed to bind request", "err", err)
 
 		code := http.StatusBadRequest
 
@@ -59,7 +59,7 @@ func Bind(c echo.Context, v interface{}) error {
 			Title:   http.StatusText(code),
 			Details: []*ErrorDetail{{Text: "invalid parameter"}},
 		}); err != nil {
-			log.Error().Stack().Err(errors.WithStack(err)).Msg("")
+			logger.FromContext(c.Request().Context()).Error("failed to write bind error response", "err", err)
 		}
 
 		return err
@@ -114,7 +114,7 @@ func HandleError(c echo.Context, err error) error {
 		Title:   http.StatusText(code),
 		Details: details,
 	}); err != nil {
-		log.Error().Stack().Err(errors.WithStack(err)).Msg("")
+		logger.FromContext(c.Request().Context()).Error("failed to write error response", "err", err)
 	}
 
 	return err

@@ -4,25 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/SoraDaibu/go-clean-starter/builder"
 	imiddleware "github.com/SoraDaibu/go-clean-starter/internal/http/middleware"
 )
 
 type Server struct {
-	closer func() error
-	echo   *echo.Echo
-	port   uint16
+	closer   func() error
+	echo     *echo.Echo
+	port     uint16
+	logLevel string
 }
 
 func NewServer(d *builder.Dependency) *Server {
-	s := &Server{port: d.Config.App.ListenPort}
+	s := &Server{
+		port:     d.Config.App.ListenPort,
+		logLevel: d.Config.App.LogLevel,
+	}
 
 	s.closer = func() error {
 		d.DB.Close()
@@ -39,7 +40,7 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) Run() {
-	if zerolog.GlobalLevel() == zerolog.DebugLevel {
+	if s.logLevel == "debug" {
 		//nolint:errchkjson
 		data, _ := json.MarshalIndent(s.echo.Routes(), "", "  ")
 		fmt.Println(string(data))
@@ -51,35 +52,7 @@ func (s *Server) Run() {
 func setup(d *builder.Dependency) *echo.Echo {
 	e := echo.New()
 
-	var level zerolog.Level
-	switch d.Config.App.LogLevel {
-	case "debug":
-		level = zerolog.DebugLevel
-	case "info":
-		level = zerolog.InfoLevel
-	case "warning", "warn":
-		level = zerolog.WarnLevel
-	case "error":
-		level = zerolog.ErrorLevel
-	default:
-		level = zerolog.InfoLevel
-	}
-	zerolog.SetGlobalLevel(level)
-
-	// To show file:line where log was called
-	zerolog.CallerSkipFrameCount = 2
-
-	// output in JSON
-	writer := os.Stdout
-
-	// Create structured logger with timestamp and file:line
-	log.Logger = zerolog.New(writer).
-		With().
-		Timestamp(). // Add ISO timestamp
-		Caller().    // Show file:line where log was called
-		Logger()
-
-	log.Info().Str("level", level.String()).Msg("Zerolog configured")
+	d.Logger.Info("logger configured", "level", d.Config.App.LogLevel)
 
 	e.Pre(middleware.RemoveTrailingSlash())
 
@@ -87,6 +60,8 @@ func setup(d *builder.Dependency) *echo.Echo {
 		imiddleware.Recover(),
 		middleware.Logger(),
 		middleware.RequestID(),
+		// RequestLogger must run after RequestID so the request ID is available.
+		imiddleware.RequestLogger(d.Logger),
 		middleware.Secure(),
 		imiddleware.DefaultContentType(),
 		imiddleware.BodyDump(d.Config.App.Env),

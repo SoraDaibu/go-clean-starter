@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
 // ErrorResponse represents the structure of error responses
@@ -104,7 +104,7 @@ func HandleError(c echo.Context, err error) error {
 }
 
 func handleAppError(c echo.Context, appErr *AppError) error {
-	log.Error().Err(appErr).Msgf("handleAppError: processing error type %d with message: %s", appErr.Type, appErr.Message)
+	logger.FromContext(c.Request().Context()).Error("handleAppError: processing error", "err", appErr, "type", appErr.Type, "message", appErr.Message)
 
 	var statusCode int
 	var errorCode string
@@ -133,13 +133,13 @@ func handleAppError(c echo.Context, appErr *AppError) error {
 		Message: appErr.Message,
 	}
 
-	log.Info().Msgf("handleAppError: returning status %d with response: %+v", statusCode, response)
+	logger.FromContext(c.Request().Context()).Info("handleAppError: returning response", "status", statusCode, "response", response)
 	return c.JSON(statusCode, response)
 }
 
 func handleGenericError(c echo.Context, err error) error {
 	errMsg := err.Error()
-	log.Error().Err(err).Msgf("handleGenericError: processing error message: %s", errMsg)
+	logger.FromContext(c.Request().Context()).Error("handleGenericError: processing error", "err", err, "message", errMsg)
 
 	// Check for common database errors
 	if strings.Contains(errMsg, "duplicate key") || strings.Contains(errMsg, "unique constraint") {
@@ -148,7 +148,7 @@ func handleGenericError(c echo.Context, err error) error {
 			Code:    "CONFLICT",
 			Message: "A resource with this information already exists",
 		}
-		log.Error().Err(err).Msg("handleGenericError: detected duplicate key error, returning conflict")
+		logger.FromContext(c.Request().Context()).Error("handleGenericError: detected duplicate key error, returning conflict", "err", err)
 		return c.JSON(http.StatusConflict, response)
 	}
 
@@ -158,7 +158,7 @@ func handleGenericError(c echo.Context, err error) error {
 			Code:    "NOT_FOUND",
 			Message: "The requested resource was not found",
 		}
-		log.Error().Err(err).Msg("handleGenericError: detected not found error")
+		logger.FromContext(c.Request().Context()).Error("handleGenericError: detected not found error", "err", err)
 		return c.JSON(http.StatusNotFound, response)
 	}
 
@@ -169,7 +169,7 @@ func handleGenericError(c echo.Context, err error) error {
 			Code:    "BAD_REQUEST",
 			Message: "The provided ID is not a valid UUID",
 		}
-		log.Error().Err(err).Msg("handleGenericError: detected UUID parsing error")
+		logger.FromContext(c.Request().Context()).Error("handleGenericError: detected UUID parsing error", "err", err)
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
@@ -180,7 +180,7 @@ func handleGenericError(c echo.Context, err error) error {
 			Code:    "BAD_REQUEST",
 			Message: "The request body contains invalid JSON",
 		}
-		log.Error().Err(err).Msg("handleGenericError: detected JSON binding error")
+		logger.FromContext(c.Request().Context()).Error("handleGenericError: detected JSON binding error", "err", err)
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
@@ -190,6 +190,6 @@ func handleGenericError(c echo.Context, err error) error {
 		Code:    "INTERNAL_ERROR",
 		Message: "An unexpected error occurred",
 	}
-	log.Error().Err(err).Msg("handleGenericError: defaulting to internal server error")
+	logger.FromContext(c.Request().Context()).Error("handleGenericError: defaulting to internal server error", "err", err)
 	return c.JSON(http.StatusInternalServerError, response)
 }

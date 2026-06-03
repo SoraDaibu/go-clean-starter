@@ -8,10 +8,26 @@ import (
 	"strings"
 
 	"github.com/SoraDaibu/go-clean-starter/internal/http/base"
+	"github.com/SoraDaibu/go-clean-starter/internal/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog/log"
 )
+
+// RequestLogger derives a per-request logger from baseLogger, tagged with the request
+// ID set by echo's RequestID middleware, and stores it in the request context so
+// downstream HTTP call sites can retrieve it via logger.FromContext.
+func RequestLogger(baseLogger logger.Logger) echo.MiddlewareFunc {
+	return func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			id := c.Response().Header().Get(echo.HeaderXRequestID)
+			req := c.Request()
+			ctx := logger.IntoContext(req.Context(), baseLogger.With("request_id", id))
+			c.SetRequest(req.WithContext(ctx))
+
+			return h(c)
+		}
+	}
+}
 
 func Recover() echo.MiddlewareFunc {
 	return func(h echo.HandlerFunc) echo.HandlerFunc {
@@ -45,7 +61,7 @@ func Recover() echo.MiddlewareFunc {
 				errs = append(errs, errors.New(strings.Join(msgs, "\n")))
 
 				for _, err := range errs {
-					log.Error().Stack().Err(err).Msg("")
+					logger.FromContext(c.Request().Context()).Error("panic recovered", "err", err)
 				}
 
 				const code = http.StatusInternalServerError
@@ -55,7 +71,7 @@ func Recover() echo.MiddlewareFunc {
 					Title:  http.StatusText(code),
 				})
 				if err != nil {
-					log.Error().Err(err).Msg("")
+					logger.FromContext(c.Request().Context()).Error("failed to write recover response", "err", err)
 				}
 			}()
 
@@ -71,12 +87,12 @@ func BodyDump(env string) echo.MiddlewareFunc {
 		}
 
 		if c.Request().Header.Get(echo.HeaderContentType) == "application/json" {
-			log.Debug().Str("request_body", string(reqBody)).Msg("Request body")
+			logger.FromContext(c.Request().Context()).Debug("Request body", "request_body", string(reqBody))
 		} else {
-			log.Debug().Msg("Request: Binary")
+			logger.FromContext(c.Request().Context()).Debug("Request: Binary")
 		}
 
-		log.Debug().Str("response_body", string(resBody)).Msg("Response body")
+		logger.FromContext(c.Request().Context()).Debug("Response body", "response_body", string(resBody))
 	})
 }
 
