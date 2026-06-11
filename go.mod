@@ -7,7 +7,7 @@ toolchain go1.26.0
 require (
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/labstack/echo/v4 v4.15.2
 	github.com/oapi-codegen/runtime v1.4.1
 	github.com/pkg/errors v0.9.1
