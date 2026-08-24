@@ -12,7 +12,7 @@ require (
 	github.com/oapi-codegen/runtime v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
-	github.com/urfave/cli/v3 v3.10.1
+	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/term v0.45.0
 )
 
