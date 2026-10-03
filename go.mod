@@ -1,8 +1,6 @@
 module github.com/SoraDaibu/go-clean-starter
 
-go 1.26
-
-toolchain go1.26.0
+go 1.26.0
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.20.1
@@ -13,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.12.1
 	github.com/urfave/cli/v3 v3.11.0
-	golang.org/x/term v0.45.0
+	golang.org/x/term v0.46.0
 )
 
 require go.yaml.in/yaml/v3 v3.0.5 // indirect
@@ -31,7 +29,7 @@ require (
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 )
