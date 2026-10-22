@@ -11,11 +11,13 @@ RUN if [ "$LOCAL" = "true" ] ; then \
     fi
 COPY . .
 RUN go mod tidy
-RUN go build -o go-clean-starter .
+RUN go build -o /app/bin/server ./cmd/server && \
+    go build -o /app/bin/task ./cmd/task && \
+    go build -o /app/bin/migrate ./cmd/migrate
 
 # runner stage
-FROM alpine3.22 AS runner
+FROM alpine:3.22 AS runner
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
-COPY --from=builder /app/go-clean-starter .
-ENTRYPOINT [ "./go-clean-starter" ]
+COPY --from=builder /app/bin/ /app/bin/
+ENTRYPOINT [ "/app/bin/server" ]

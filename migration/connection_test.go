@@ -1,4 +1,4 @@
-package cmd
+package migration
 
 import (
 	"net/url"
@@ -14,7 +14,7 @@ func TestMigrationDatabaseURL(t *testing.T) {
 			t.Setenv("DB_NAME", "starter")
 			t.Setenv("DB_USER", "test@user")
 			t.Setenv("DB_PASSWORD", "p@ss:/?# word ")
-			u, err := url.Parse(getMigrationDatabaseURL())
+			u, err := url.Parse(DatabaseURLFromEnv())
 			if err != nil {
 				t.Fatal(err)
 			}

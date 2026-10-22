@@ -8,6 +8,8 @@
 # Options with default values are not included for simplicity.
 
 [build]
+  cmd = "go build -o ./tmp/server ./cmd/server"
+  bin = "./tmp/server"
   send_interrupt = true # Send interrupt signal (SIGINT) before killing process
 
 [color]
