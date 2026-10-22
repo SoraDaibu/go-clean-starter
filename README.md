@@ -125,6 +125,22 @@ An existing PostgreSQL 15 volume cannot be used directly by PostgreSQL 18. Befor
 
 For disposable development or test databases, the corresponding Compose project's volumes can be removed and recreated instead. Removing volumes permanently deletes their data; do this only when the data is no longer needed.
 
+## Commands
+
+Commands are dispatched by the `cmd` package using Go's standard library `flag` package:
+
+```bash
+go run . --help
+go run . --version
+go run . serve
+go run . migrate
+go run . migrate up
+go run . migrate down
+go run . task import --source-dir=./internal/task/item/data --dry-run
+```
+
+`migrate` uses the database environment variables; `migrate up` and `migrate down` prompt for connection details. Each command supports `-h` and `--help`. Import flags must follow `task import` and precede any positional arguments; this command accepts no positional arguments. Boolean values use `--dry-run` or `--dry-run=false`. Invalid commands, invalid flags, and command failures exit with a nonzero status.
+
 ## Test
 - run `make test` to test
 `make test` will create a test environment using the test specific [docker-compose.test.yaml](./docker-compose.test.yaml) with the same [Dockerfile](./Dockerfile) as development.

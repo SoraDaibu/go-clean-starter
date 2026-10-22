@@ -7,62 +7,37 @@ import (
 	"github.com/SoraDaibu/go-clean-starter/builder"
 	"github.com/SoraDaibu/go-clean-starter/config"
 	"github.com/SoraDaibu/go-clean-starter/migration"
-
-	"github.com/urfave/cli/v3"
 )
 
-var TaskCommand = &cli.Command{
-	Name:  "task",
-	Usage: "Parent Task Command. Exact subcommand is required to run a task.",
-	Commands: []*cli.Command{
-		{
-			Name:  "import",
-			Usage: "Import item from files",
-			Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
-				cnf, err := config.Load()
-				if err != nil {
-					return err
-				}
+func importItems(ctx context.Context, sourceDir string, dryRun bool) error {
+	cnf, err := config.Load()
+	if err != nil {
+		return err
+	}
 
-				dependencies, err := builder.InitializeDependency(cnf)
-				if err != nil {
-					return err
-				}
+	dependencies, err := builder.InitializeDependency(cnf)
+	if err != nil {
+		return err
+	}
 
-				// args
-				sourceDir := c.String("source-dir")
-				dryRun := c.Bool("dry-run")
-				slog.Info("importing items", "source-dir", sourceDir, "dry-run", dryRun)
+	defer dependencies.DB.Close()
 
-				// migrate if local
-				if cnf.App.Env == "local" {
-					if err := migration.Up(getMigrationDatabaseURL()); err != nil {
-						return err
-					}
-				}
+	slog.Info("importing items", "source-dir", sourceDir, "dry-run", dryRun)
 
-				task := builder.InitializeItemTaskUsecase(dependencies)
-				err = task.ImportItems(ctx, sourceDir, dryRun)
-				if err != nil {
-					return err
-				}
+	// migrate if local
+	if cnf.App.Env == "local" {
+		if err := migration.Up(getMigrationDatabaseURL()); err != nil {
+			return err
+		}
+	}
 
-				slog.Info("item import success 🎉")
+	task := builder.InitializeItemTaskUsecase(dependencies)
+	err = task.ImportItems(ctx, sourceDir, dryRun)
+	if err != nil {
+		return err
+	}
 
-				return nil
-			}),
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:  "source-dir",
-					Usage: "Directory containing CSV files",
-					Value: "./internal/task/item/data",
-				},
-				&cli.BoolFlag{
-					Name:  "dry-run",
-					Usage: "Validate files without importing",
-				},
-			},
-		},
-		// NOTE: Add more subcommands here for new tasks
-	},
+	slog.Info("item import success 🎉")
+
+	return nil
 }

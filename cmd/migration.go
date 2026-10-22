@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"strings"
@@ -14,69 +14,46 @@ import (
 	"github.com/SoraDaibu/go-clean-starter/migration"
 
 	"golang.org/x/term"
-
-	"github.com/urfave/cli/v3"
 )
 
-var MigrationCommand = &cli.Command{
-	Name: "migrate",
-	Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
+func migrate(direction string) error {
+	if direction == "" {
 		return migration.Up(getMigrationDatabaseURL())
-	}),
-	Commands: []*cli.Command{{
-		Name: "up",
-		Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
-			// Use a human-readable logger for this interactive CLI command.
-			logger.SetDefault(logger.New("info", "local"))
-			if err := migration.Up("postgres://" + scanDatasource()); err != nil {
-				return err
-			}
-
-			slog.Info("Successfully upped ⤴️")
-
-			return nil
-		}),
-	}, {
-		Name: "down",
-		Action: cli.ActionFunc(func(ctx context.Context, c *cli.Command) error {
-			// Use a human-readable logger for this interactive CLI command.
-			logger.SetDefault(logger.New("info", "local"))
-			if err := migration.Down("postgres://" + scanDatasource()); err != nil {
-				return err
-			}
-
-			slog.Info("Successfully downed ⤵️")
-
-			return nil
-		}),
-	}},
+	}
+	logger.SetDefault(logger.New("info", "local"))
+	databaseURL, err := scanDatasource()
+	if err != nil {
+		return err
+	}
+	if direction == "up" {
+		err = migration.Up(databaseURL)
+	} else {
+		err = migration.Down(databaseURL)
+	}
+	if err != nil {
+		return err
+	}
+	slog.Info("migration complete", "direction", direction)
+	return nil
 }
 
 func getMigrationDatabaseURL() string {
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	database := os.Getenv("DB_NAME")
-	username := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	sslMode := os.Getenv("PGSSLMODE")
-	if sslMode == "" {
-		sslMode = "disable"
-	}
+	return migrationDatabaseURL(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"))
+}
 
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		strings.TrimSpace(username),
-		strings.TrimSpace(password),
-		strings.TrimSpace(host),
-		strings.TrimSpace(port),
-		strings.TrimSpace(database),
-	) + fmt.Sprintf("?%s", url.Values{
-		"sslmode": []string{sslMode},
-	}.Encode())
+func migrationDatabaseURL(host, port, database, username, password string) string {
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(strings.TrimSpace(username), password),
+		Host:     net.JoinHostPort(strings.TrimSpace(host), strings.TrimSpace(port)),
+		Path:     "/" + strings.TrimSpace(database),
+		RawQuery: url.Values{"sslmode": []string{migrationSSLMode()}}.Encode(),
+	}
+	return u.String()
 }
 
 //nolint:forbidigo
-func scanDatasource() string {
+func scanDatasource() (string, error) {
 	var host,
 		port,
 		database,
@@ -114,25 +91,25 @@ func scanDatasource() string {
 		username = os.Getenv("DB_USER")
 	}
 
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("read connection details: %w", err)
+	}
+
 	fmt.Print("Password > ")
 
 	bytePassword, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
-		slog.Error("failed to read password", "err", err)
-		panic(err)
+		return "", fmt.Errorf("read password: %w", err)
 	}
 
 	fmt.Println("")
 
-	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s",
-		strings.TrimSpace(username),
-		strings.TrimSpace(string(bytePassword)),
-		strings.TrimSpace(host),
-		strings.TrimSpace(port),
-		strings.TrimSpace(database),
-	) + fmt.Sprintf("?%s", url.Values{
-		"charset": []string{"utf8mb4"},
-		"loc":     []string{"UTC"},
-	}.Encode())
+	return migrationDatabaseURL(host, port, database, username, string(bytePassword)), nil
+}
+
+func migrationSSLMode() string {
+	if mode := os.Getenv("PGSSLMODE"); mode != "" {
+		return mode
+	}
+	return "disable"
 }

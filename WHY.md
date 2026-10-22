@@ -17,9 +17,13 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
 - **[pgx](https://github.com/jackc/pgx)** - High-performance PostgreSQL driver with rich PosgreSQL features and toolkit
 - **[log/slog](https://pkg.go.dev/log/slog)** - Standard library structured logging
-- **[CLI v3](https://github.com/urfave/cli)** - Command line interface framework
+- **[flag](https://pkg.go.dev/flag)** - Standard library command-line flag parsing
 - **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
 
+
+## Command dispatch and flags
+
+The `cmd` package dispatches `serve`, `migrate`, and `task import` to plain Go functions. Each command uses a `flag.FlagSet` with `flag.ContinueOnError` so parsing and help can be tested without opening database connections. This small command tree needs no external CLI framework. Help, version output, and errors remain explicit; `main` returns a nonzero exit status on failure.
 
 ## 🧠 Core Decisions
 

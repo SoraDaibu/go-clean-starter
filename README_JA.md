@@ -122,6 +122,22 @@ PostgreSQL 15の既存ボリュームをPostgreSQL 18でそのまま使うこと
 
 データを残す必要のない開発用・テスト用データベースは、対象のComposeプロジェクトのボリュームを削除して作り直すこともできます。ボリュームを削除するとデータは完全に失われるため、不要なデータであることを確認してから実行してください。
 
+## コマンド
+
+`cmd`パッケージでコマンドを振り分け、Go標準ライブラリの`flag`パッケージでフラグを解析します。
+
+```bash
+go run . --help
+go run . --version
+go run . serve
+go run . migrate
+go run . migrate up
+go run . migrate down
+go run . task import --source-dir=./internal/task/item/data --dry-run
+```
+
+`migrate`はデータベースの環境変数を使用します。`migrate up`と`migrate down`は接続情報を対話形式で入力します。各コマンドは`-h`と`--help`に対応しています。インポート用フラグは`task import`の後に指定してください。位置引数には対応していません。真偽値は`--dry-run`または`--dry-run=false`で指定します。不明なコマンド、不正なフラグ、実行時のエラーが発生した場合は、終了コードが非ゼロになります。
+
 ## テスト
 - `make test`を実行してテストを行います
 `make test`は、開発環境と同じ[Dockerfile](./Dockerfile)を使用して、テスト専用の[docker-compose.test.yaml](./docker-compose.test.yaml)でテスト環境を作成します。
