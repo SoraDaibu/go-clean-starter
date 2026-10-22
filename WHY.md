@@ -21,10 +21,6 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
 
 
-## Command dispatch and flags
-
-The `cmd` package dispatches `serve`, `migrate`, and `task import` to plain Go functions. Each command uses a `flag.FlagSet` with `flag.ContinueOnError` so parsing and help can be tested without opening database connections. This small command tree needs no external CLI framework. Help, version output, and errors remain explicit; `main` returns a nonzero exit status on failure.
-
 ## 🧠 Core Decisions
 
 ### 🔹 Language: **Go**
