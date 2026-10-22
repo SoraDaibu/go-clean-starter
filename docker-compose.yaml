@@ -38,7 +38,7 @@ services:
     container_name: go-clean-starter-task-runner
 
   postgres:
-    image: postgres:15
+    image: postgres:18
     container_name: postgres
     ports:
       - "5432:5432"
@@ -47,7 +47,7 @@ services:
       POSTGRES_PASSWORD: example
       POSTGRES_DB: go_clean_starter
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     networks:
       - app-network
     healthcheck:

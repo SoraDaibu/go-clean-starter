@@ -45,6 +45,8 @@ Go is used for its:
 
 ### 🔹 Database: **PostgreSQL**
 
+Development and tests use the same PostgreSQL 18 major version to keep database behavior consistent. The `postgres:18` tag receives minor updates without automatically switching major versions. The volume mount at `/var/lib/postgresql` follows the official image's version-specific data layout. Existing PostgreSQL 15 data requires an explicit upgrade; see [PostgreSQL upgrades](./README.md#postgresql-upgrades).
+
 PostgreSQL was chosen as the primary database because:
 - It's reliable, open-source, and widely adopted
 - It supports rich features like JSONB, full-text search, and strong consistency

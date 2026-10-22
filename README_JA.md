@@ -114,6 +114,14 @@ APIは`http://localhost:8080`で利用可能になります。
 
 💡 このプロジェクトは**[air](https://github.com/air-verse/air)**を使用しており、これはGoのホットリロード機能です。ホットリロードにより、より高速な開発が可能になります。
 
+## PostgreSQLのアップグレード
+
+開発用・テスト用のComposeは、どちらも`postgres:18`を使用します。ボリュームは`/var/lib/postgresql`にマウントし、イメージは`/var/lib/postgresql/18/docker`にデータを保存します。
+
+PostgreSQL 15の既存ボリュームをPostgreSQL 18でそのまま使うことはできません。切り替える前にアプリケーションからの書き込みを止め、PostgreSQL 15のコンテナでバックアップを取得してください。新しいPostgreSQL 18用のボリュームに復元し、データを確認してから旧ボリュームを削除してください。イメージのタグを変更するだけではデータは移行されません。このプロジェクトのSQLマイグレーションが管理するのは、アプリケーションのスキーマのみです。詳しくは[PostgreSQLのアップグレードガイド](https://www.postgresql.org/docs/18/upgrading.html)を参照してください。
+
+データを残す必要のない開発用・テスト用データベースは、対象のComposeプロジェクトのボリュームを削除して作り直すこともできます。ボリュームを削除するとデータは完全に失われるため、不要なデータであることを確認してから実行してください。
+
 ## テスト
 - `make test`を実行してテストを行います
 `make test`は、開発環境と同じ[Dockerfile](./Dockerfile)を使用して、テスト専用の[docker-compose.test.yaml](./docker-compose.test.yaml)でテスト環境を作成します。
