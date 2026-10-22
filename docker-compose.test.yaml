@@ -15,7 +15,7 @@ services:
       - app-network
 
   postgres:
-    image: postgres:15
+    image: postgres:18
     container_name: postgres-test
     ports:
       - "5439:5432"
@@ -24,7 +24,7 @@ services:
       POSTGRES_PASSWORD: testpassword
       POSTGRES_DB: go_clean_starter_test
     volumes:
-      - postgres-test-data:/var/lib/postgresql/data
+      - postgres-test-data:/var/lib/postgresql
     networks:
       - app-network
     healthcheck:

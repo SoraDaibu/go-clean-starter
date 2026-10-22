@@ -117,6 +117,14 @@ The API will be available at `http://localhost:8080`
 
 💡 This project uses **[air](https://github.com/air-verse/air)**, which is Go hot reload. Hot reload helps us to develop faster.
 
+## PostgreSQL upgrades
+
+Both Compose environments use `postgres:18`. The volume is mounted at `/var/lib/postgresql`, with the image storing data in `/var/lib/postgresql/18/docker`.
+
+An existing PostgreSQL 15 volume cannot be used directly by PostgreSQL 18. Before switching, stop application writes and back up the database using the PostgreSQL 15 container. Restore into a fresh PostgreSQL 18 volume and verify the data before removing the old volume. Changing the image tag does not migrate data; the project's SQL migrations only manage the application schema. See the [PostgreSQL upgrade guide](https://www.postgresql.org/docs/18/upgrading.html).
+
+For disposable development or test databases, the corresponding Compose project's volumes can be removed and recreated instead. Removing volumes permanently deletes their data; do this only when the data is no longer needed.
+
 ## Test
 - run `make test` to test
 `make test` will create a test environment using the test specific [docker-compose.test.yaml](./docker-compose.test.yaml) with the same [Dockerfile](./Dockerfile) as development.
