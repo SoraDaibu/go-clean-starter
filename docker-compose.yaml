@@ -19,7 +19,7 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    command: ["air", "serve"]
+    command: ["air"]
     container_name: go-clean-starter-api
 
   task-runner:

@@ -17,7 +17,7 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 - **[air](https://github.com/air-verse/air)** - Hot reload tool for Go development
 - **[pgx](https://github.com/jackc/pgx)** - High-performance PostgreSQL driver with rich PosgreSQL features and toolkit
 - **[log/slog](https://pkg.go.dev/log/slog)** - Standard library structured logging
-- **[CLI v3](https://github.com/urfave/cli)** - Command line interface framework
+- **[flag](https://pkg.go.dev/flag)** - Standard library command-line flag parsing
 - **[Testify](https://github.com/stretchr/testify)** - Testing toolkit with assertions and mocks
 
 

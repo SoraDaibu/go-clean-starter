@@ -77,10 +77,10 @@ oapi-codegen:
 
 # ─── Task ─────────────────────────────────────────────────────────────
 import-items:
-	$(DC) --profile task run --rm task-runner go run . task import --source-dir=$(or $(source-dir),./internal/task/item/data) $(if $(dry-run),--dry-run)
+	$(DC) --profile task run --rm task-runner go run ./cmd/task --source-dir=$(or $(source-dir),./internal/task/item/data) $(if $(dry-run),--dry-run)
 
 import-items-dry:
-	$(DC) --profile task run --rm task-runner go run . task import --source-dir=$(or $(source-dir),./internal/task/item/data) --dry-run
+	$(DC) --profile task run --rm task-runner go run ./cmd/task --source-dir=$(or $(source-dir),./internal/task/item/data) --dry-run
 
 
 # ─── Chore ─────────────────────────────────────────────────────────────
