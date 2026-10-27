@@ -23,6 +23,10 @@ This document explains the key technology decisions behind `go-clean-starter`. I
 
 ## 🧠 Core Decisions
 
+### CI validation
+
+CI reuses `make test` and the existing Docker Compose configuration to keep PostgreSQL and Go versions consistent with development. A separate runtime-image smoke test catches missing executable or runtime-library issues that builder-stage tests cannot detect. The workflow has read-only repository permissions and uses no repository secrets, so it can also validate Dependabot pull requests.
+
 ### 🔹 Language: **Go**
 
 Go is used for its:
