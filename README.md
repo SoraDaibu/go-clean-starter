@@ -134,6 +134,8 @@ Thus safety of test environment is assured as it's separated from local environm
 make test
 ```
 
+The [CI workflow](./.github/workflows/ci.yml) checks module checksums and tidy state, runs `make test` with PostgreSQL 18, and builds and smoke-tests the runtime image on pull requests and pushes to `main`. Failed checks must be investigated before merging dependency updates; a skipped bot review is not a passing test.
+
 ## API Usage
 
 Once the server is running, you can interact with the API:
