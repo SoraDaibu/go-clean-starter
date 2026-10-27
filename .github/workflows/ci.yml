@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPOSE_PROJECT_NAME: go-clean-starter-test
+      COMPOSE_FILE: docker-compose.test.yaml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the test image
+        run: docker compose build app
+      - name: Verify module checksums and tidy state
+        run: |
+          docker compose run --rm --no-deps --entrypoint go app mod verify
+          docker compose run --rm --no-deps --entrypoint go app mod tidy -diff
+      - name: Run integration and unit tests with PostgreSQL
+        run: make test
+      - name: Build the runtime image
+        run: docker build --target runner --tag go-clean-starter:ci .
+      - name: Smoke-test runtime executables
+        run: |
+          docker run --rm go-clean-starter:ci --version
+          docker run --rm --entrypoint /app/bin/task go-clean-starter:ci --help
+          docker run --rm --entrypoint /app/bin/migrate go-clean-starter:ci --help
+      - name: Show database logs on failure
+        if: failure()
+        run: docker compose logs --no-color postgres
+      - name: Clean up test containers and volumes
+        if: always()
+        run: docker compose down --volumes --remove-orphans
