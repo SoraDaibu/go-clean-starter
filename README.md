@@ -2,7 +2,7 @@
 
 [🇯🇵 **日本語**](./README_JA.md)
 
-This is a Go template of clean architecture to ease and boost up a backend development with up to date libraries utilizing clean architecture as design.
+Start a Go backend with Echo, PostgreSQL, sqlc, OpenAPI-generated types and explicit dependency wiring in plain Go. The template includes an HTTP API and a CSV import task, so both entry points can share the application's service and repository layers.
 
 ## Requirements
 | Name | Used for |
@@ -13,10 +13,11 @@ This is a Go template of clean architecture to ease and boost up a backend devel
 | [golangci-lint](https://github.com/golangci/golangci-lint) | for linting source code |
 
 ## Overview
-This app has three containers.
-- `api` to run api server
-- `task` to run task
-- `postgres` for database
+The default Compose setup starts two services:
+- `api`: HTTP server with Air hot reload
+- `postgres`: development database
+
+The optional `task-runner` service runs CLI tasks under the `task` profile.
 
 ### Architecture
 
@@ -111,9 +112,21 @@ make quickstart
 
 This command will:
 1. Copy `.env.example` to `.env` (if not exists)
-2. Build and start all containers
+2. Start the API and PostgreSQL services (building the API image when needed)
 
-The API will be available at `http://localhost:8080`
+After the API has started, check it with:
+```bash
+curl --fail http://localhost:8080/health
+```
+
+If the API is not ready, inspect `make log-api` and `docker compose ps`.
+
+To preview the included CSV import without saving items:
+```bash
+make import-items-dry
+```
+
+The import runs through the optional `task-runner` service; it is not started by `make quickstart`.
 
 💡 This project uses **[air](https://github.com/air-verse/air)**, which is Go hot reload. Hot reload helps us to develop faster.
 
@@ -140,7 +153,7 @@ The [CI workflow](./.github/workflows/ci.yml) checks module checksums and tidy s
 
 Once the server is running, you can interact with the API:
 
-📋 **Complete API documentation is available in [`api.yaml`](./api.yaml)** - OpenAPI 3.1 specification with all endpoints, schemas, and examples.
+📋 **Complete API documentation is available in [`doc/api.yaml`](./doc/api.yaml)** - OpenAPI 3.1 specification with all endpoints, schemas, and examples.
 
 ### Health Check
 ```bash
@@ -152,4 +165,4 @@ curl http://localhost:8080/health
 - Review [WHY.md](./WHY.md) for architecture decisions
 
 ## Contributions
-read [CONTRIUTING.md](./CONTRIBUTING.md) to contribute to this project.
+read [CONTRIBUTING.md](./CONTRIBUTING.md) to contribute to this project.
