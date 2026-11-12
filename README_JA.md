@@ -1,5 +1,5 @@
 # go-clean-starter
-これはクリーンアーキテクチャを採用し、最新のライブラリを活用したGoのテンプレートです。バックエンド開発を効率化し、加速させることを目的としています。
+Echo、PostgreSQL、sqlc、OpenAPIから生成した型、プレーンなGoによる手動DIを組み合わせたバックエンドのテンプレートです。HTTP APIとCSVインポートタスクの実装例があり、両方の入口からサービス層・リポジトリ層を共有できます。
 
 ## 必要な環境
 | 名前 | 用途 |
@@ -10,10 +10,11 @@
 | [golangci-lint](https://github.com/golangci/golangci-lint) | ソースコードの静的解析 |
 
 ## 概要
-このアプリケーションは3つのコンテナで構成されています。
-- `api` APIサーバー
-- `task` タスクの実行
-- `postgres` データベース
+通常のCompose起動では、以下の2サービスを起動します。
+- `api`: Airによるホットリロード付きHTTPサーバー
+- `postgres`: 開発用データベース
+
+CLIタスク用の`task-runner`は、`task`プロファイルで実行する任意のサービスです。
 
 ### アーキテクチャ
 
@@ -108,9 +109,21 @@ make quickstart
 
 このコマンドは以下を実行します：
 1. `.env.example`から`.env`を作成（存在しない場合）
-2. すべてのコンテナをビルドして起動
+2. APIとPostgreSQLを起動（必要に応じてAPIイメージをビルド）
 
-APIは`http://localhost:8080`で利用可能になります。
+APIの起動後、以下で応答を確認します。
+```bash
+curl --fail http://localhost:8080/health
+```
+
+応答しない場合は、`make log-api`と`docker compose ps`で状態を確認してください。
+
+付属のCSVインポートを、アイテムを保存せずに試すには以下を実行します。
+```bash
+make import-items-dry
+```
+
+インポートは任意の`task-runner`サービスで実行します。`make quickstart`では起動しません。
 
 💡 このプロジェクトは**[air](https://github.com/air-verse/air)**を使用しており、これはGoのホットリロード機能です。ホットリロードにより、より高速な開発が可能になります。
 
@@ -137,7 +150,7 @@ make test
 
 サーバーが起動したら、以下のようにAPIを利用できます：
 
-📋 **完全なAPIドキュメントは[`api.yaml`](./api.yaml)で確認できます** - すべてのエンドポイント、スキーマ、サンプルを含むOpenAPI 3.1仕様書です。
+📋 **完全なAPIドキュメントは[`doc/api.yaml`](./doc/api.yaml)で確認できます** - すべてのエンドポイント、スキーマ、サンプルを含むOpenAPI 3.1仕様書です。
 
 ### ヘルスチェック
 ```bash
@@ -149,7 +162,7 @@ curl http://localhost:8080/health
 - アーキテクチャの選定理由については[WHY.md](./WHY.md)を参照してください。
 
 ## 貢献
-このプロジェクトに貢献するには[CONTRIUTING.md](./CONTRIBUTING.md)をお読みください。
+このプロジェクトに貢献するには[CONTRIBUTING.md](./CONTRIBUTING.md)をお読みください。
 
 ---
 
