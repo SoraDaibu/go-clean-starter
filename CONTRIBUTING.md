@@ -12,8 +12,7 @@ We welcome contributions! This project follows clean architecture principles and
 
 2. **Setup Environment**
    ```bash
-   cp .env.sample .env
-   make build && make up
+   make quickstart
    ```
 
 3. **Run Tests**
