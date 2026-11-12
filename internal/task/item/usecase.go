@@ -9,6 +9,10 @@ import (
 )
 
 type ItemTaskUsecase interface {
+	// ImportItems processes rows on a best-effort basis and returns an error if
+	// any row fails validation or persistence. Successful rows remain committed;
+	// retrying the whole import may create duplicates. A dry run validates rows
+	// without persisting them and also reports validation failures.
 	ImportItems(ctx context.Context, sourceDir string, dryRun bool) error
 }
 

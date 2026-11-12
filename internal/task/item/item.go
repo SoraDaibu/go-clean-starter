@@ -74,6 +74,10 @@ func (u *itemTaskUsecase) ImportItems(ctx context.Context, sourceDir string, dry
 		"total_errors", totalErrors,
 	)
 
+	if totalErrors > 0 {
+		return fmt.Errorf("item import completed with %d row error(s); see logs for details", totalErrors)
+	}
+
 	return nil
 }
 
@@ -148,6 +152,7 @@ func (u *itemTaskUsecase) importCSVFile(ctx context.Context, filePath string, dr
 
 		if err != nil {
 			err := fmt.Errorf("failed to create item at line %d: %w", i+2, err)
+			u.Logger.Error("Failed to create item", "err", err, "file", filePath)
 			result.addError(err)
 			continue
 		}
